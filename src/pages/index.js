@@ -1,59 +1,32 @@
 import Head from "next/head";
+import MainForm from "@/components/main/\bMainForm";
+import Modal from "@/components/ui/Modal";
 import { useState } from "react";
-import { Configuration, OpenAIApi } from "openai";
-
-const configuration = new Configuration({
-  organization: "org-NsCoTugKcgVqLgT63XcfTPml",
-  apiKey: process.env.NEXT_PUBLIC_API_KEY,
-});
-
-const openai = new OpenAIApi(configuration);
 
 export default function Home() {
-  const [form, setForm] = useState({
-    company: "",
-    job: "",
-    career: "신입",
-    major: "비전공",
-    experience: "",
-  });
-
-  const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const onInputChange = (e, key) => {
-    setForm({
-      ...form,
-      [key]: e.target.value,
-    });
+  const submit = async (form) => {
+    setIsModalOpen(true);
+      const response = await fetch("/api/gpt", {
+      method: "POST",
+      body: JSON.stringify(form),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if(!response.ok){
+        modalCloseHandler();
+        return;
+      }
+      const data = await response.json();
+      setAnswer(data);
   };
 
-  const checkValidation = () => {
-    for(let key in form){
-      if(form[key].trim() === ""){
-        alert("모든 입력 값을 넣어주세요.");
-        break;
-      }
-    }
-  }
-
-  const submit = async () => {
-    checkValidation();
-
-    // const response = await openai.createChatCompletion({
-    //   model: "gpt-3.5-turbo",
-    //   messages: [
-    //     {
-    //       role: "system",
-    //       content: `너는 ${form.company} ${form.job} 직군에 ${form.career} 부분에 지원을 하고 싶은 취업을 하고싶은 취업 준비생이다. 너는 ${form.major}야. 너는 ${form.experience}를 한 경험을 가지고 있어. 너는 무엇이든 잘 하고 이력서에 넣을 자소소개서인 만큼 잘 꾸며서 대답해줄수있어.`,
-    //     },
-    //     { role: "user", content: question },
-    //   ],
-    //   max_tokens: 3000,
-    //   temperature: 0,
-    // });
-
-    // setAnswer(response.data.choices[0].message.content);
+  const modalCloseHandler = () => {
+    setAnswer("");
+    setIsModalOpen(false);
   };
 
   return (
@@ -64,147 +37,12 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main>
-        <div className="max-w-md mx-auto">
-          <form className="px-8 pt-6 pb-8 mb-4">
-            <div className="mb-4">
-              <label className="block font-bold mb-2" htmlFor="company">
-                회사명
-              </label>
-              <input
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="company"
-                type="text"
-                value={form.company}
-                placeholder="지원할 회사 명을 입력해주세요."
-                onChange={(e) => onInputChange(e, "company")}
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block font-bold mb-2" htmlFor="job">
-                직군명
-              </label>
-              <input
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="job"
-                type="text"
-                value={form.job}
-                placeholder="지원할 직군을 입력해주세요."
-                onChange={(e) => onInputChange(e, "job")}
-              />
-            </div>
-            <div className="flex items-center justify-start mb-4">
-              <div className="flex items-center mr-8">
-                <input
-                  type="radio"
-                  className="form-radio h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                  name="career"
-                  value="신입"
-                  checked={form.career === "신입"}
-                  onChange={(e) => onInputChange(e, "career")}
-                  id="newCareer"
-                />
-                <label
-                  htmlFor="newCareer"
-                  className="ml-2 block text-sm leading-5"
-                >
-                  신입
-                </label>
-              </div>
-              <div className="flex items-center">
-                <input
-                  type="radio"
-                  className="form-radio h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                  name="career"
-                  value="경력"
-                  checked={form.career === "경력"}
-                  onChange={(e) => onInputChange(e, "career")}
-                  id="career"
-                />
-                <label
-                  htmlFor="career"
-                  className="ml-2 block text-sm leading-5"
-                >
-                  경력
-                </label>
-              </div>
-            </div>
-            <div className="flex items-center justify-start mb-4">
-              <div className="flex items-center  mr-5">
-                <input
-                  type="radio"
-                  className="form-radio h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                  name="major"
-                  value="비전공"
-                  checked={form.major === "비전공"}
-                  onChange={(e) => onInputChange(e, "major")}
-                  id="major_no"
-                />
-                <label
-                  htmlFor="major_no"
-                  className="ml-2 block text-sm leading-5"
-                >
-                  비전공
-                </label>
-              </div>
-              <div className="flex items-center">
-                <input
-                  type="radio"
-                  className="form-radio h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                  name="major"
-                  value="전공"
-                  checked={form.major === "전공"}
-                  onChange={(e) => onInputChange(e, "major")}
-                  id="major_ok"
-                />
-                <label
-                  htmlFor="major_ok"
-                  className="ml-2 block text-sm leading-5"
-                >
-                  전공
-                </label>
-              </div>
-            </div>
-            <div className="mb-4">
-              <label className="font-bold mb-2 mr-5 block" htmlFor="experience">
-                경험
-              </label>
-              <input
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="experience"
-                type="text"
-                value={form.experience}
-                placeholder="경험을 입력해주세요. ex) 호주 워킹홀리데이"
-                onChange={(e) => onInputChange(e, "experience")}
-              />
-            </div>
-            <div className="mb-4">
-              <label className="font-bold mb-2 mr-5 block" htmlFor="experience">
-                질문
-              </label>
-              <input
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="question"
-                type="text"
-                value={question}
-                placeholder="질문을 입력해주세요."
-                onChange={(e) => setQuestion(e.target.value)}
-              />
-            </div>
-            <div className="flex items-center justify-center">
-              <button
-                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                type="button"
-                onClick={submit}
-              >
-                Submit
-              </button>
-            </div>
-
-            <p className="mt-5">답변: {answer}</p>
-          </form>
-        </div>
-      </main>
+      <Modal
+        isOpen={isModalOpen}
+        answer={answer}
+        onClose={modalCloseHandler}
+      />
+      <MainForm submit={submit}/>
     </>
   );
 }
